@@ -93,12 +93,11 @@ int main(void)
   /* USER CODE END 2 */
 
   /* Infinite loop */
+  while(1) {
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-	for (int i = 0; i < 5; i++) {
-		blink();
-	}
+  blinkShort();blinkShort();blinkShort();
+  blinkLong();blinkLong();blinkLong();
+  blinkShort();blinkShort();blinkShort();
 	HAL_Delay(2000);
     /* USER CODE END WHILE */
 
@@ -107,9 +106,16 @@ int main(void)
   /* USER CODE END 3 */
 }
 
-void blink(void) {
+void blinkShort(void) {
+	HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+	HAL_Delay(300);
 	HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 	HAL_Delay(100);
+}
+
+void blinkLong(void) {
+	HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+	HAL_Delay(600);
 	HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
 	HAL_Delay(100);
 }

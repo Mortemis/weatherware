@@ -20,3 +20,13 @@ Photoresistor | Lighting				            | GPIO B14
 ### Circuit diagram:
 ![Circuit image](docs/circuit.jpg)
 
+ENC28J60 SPI Connection:
+
+Pin name | MCU pin | Description
+---|---|---
+3.3 | 3.3 | Power input
+GND | GND | Ground
+SI  | A7  | MOSI
+SO  | A6  | MISO
+SCK | A5  | Clock
+CS  | A4  | Chip select 

@@ -6,6 +6,7 @@ extern uint8_t macaddr[6];
 extern char str1[60];
 extern uint32_t clock_cnt;//счетчик секунд
 extern uint8_t net_buf[ENC28J60_MAXFRAME];
+extern USART_prop_ptr usartprop;
 uint8_t macbroadcast[6]=MAC_BROADCAST;
 uint8_t macnull[6]=MAC_NULL;
 arp_record_ptr arp_rec[5];
@@ -72,6 +73,7 @@ void arp_send(enc28j60_frame_ptr *frame)
 	memcpy(msg->macaddr_src,macaddr,6);
 	memcpy(msg->ipaddr_dst,msg->ipaddr_src,4);
 	memcpy(msg->ipaddr_src,ipaddr,4);
+	memcpy(frame->addr_dest,frame->addr_src,6);
 	eth_send(frame,sizeof(arp_msg_ptr));
 
 	sprintf(str1,"%02X:%02X:%02X:%02X:%02X:%02X(%d.%d.%d.%d)-",
@@ -86,16 +88,17 @@ void arp_send(enc28j60_frame_ptr *frame)
 //-----------------------------------------------
 uint8_t arp_request(uint8_t *ip_addr)
 {
-	uint8_t i;
+	uint8_t i, j;
+	enc28j60_frame_ptr *frame=(void*)net_buf;
 	//проверим, может такой адрес уже есть в таблице ARP, а задодно и удалим оттуда просроченные записи
-	for(i=0;i<5;i++)
+	for(j=0;j<5;j++)
   {
 		//Если записи уже более 12 часов, то удалим её
-		if((clock_cnt-arp_rec[i].sec)>43200)
+		if((clock_cnt-arp_rec[j].sec)>43200)
 		{
-			memset(arp_rec+(sizeof(arp_record_ptr)*i),0,sizeof(arp_record_ptr));
+			memset(arp_rec+(sizeof(arp_record_ptr)*j),0,sizeof(arp_record_ptr));
 		}
-		if(!memcmp(arp_rec[i].ipaddr,ip_addr,4))
+		if(!memcmp(arp_rec[j].ipaddr,ip_addr,4))
 		{
 			//смотрим ARP-таблицу
 			for(i=0;i<5;i++)
@@ -107,10 +110,14 @@ uint8_t arp_request(uint8_t *ip_addr)
 				(unsigned long)arp_rec[i].sec);
 				HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0x1000);
 			}
+			 memcpy(frame->addr_dest,arp_rec[j].macaddr,6);
+			  if(usartprop.is_ip==3)//статус отправки UDP-пакета
+			  {
+			    net_cmd();
+			  }
 			return 0;
 		}
 	}
-	enc28j60_frame_ptr *frame=(void*)net_buf;
 	arp_msg_ptr *msg=(void*)(frame->data);
 	msg->net_tp = ARP_ETH;
 	msg->proto_tp = ARP_IP;

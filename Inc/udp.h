@@ -8,7 +8,8 @@
 #include <stdint.h>
 #include "enc28j60.h"
 #include "net.h"
- //--------------------------------------------------
+//--------------------------------------------------
+#define LOCAL_PORT 2000
 
 typedef struct udp_pkt {
   uint16_t port_src; //порт отправителя
@@ -20,5 +21,6 @@ typedef struct udp_pkt {
 //--------------------------------------------------
 uint8_t udp_read(enc28j60_frame_ptr *frame, uint16_t len);
 uint8_t udp_reply(enc28j60_frame_ptr *frame, uint16_t len);
+uint8_t udp_send(uint8_t *ip_addr, uint16_t port);
 //--------------------------------------------------
 #endif /* UDP_H_ */

@@ -54,7 +54,7 @@ typedef struct icmp_pkt{
 } icmp_pkt_ptr;
 //--------------------------------------------------
  typedef struct USART_prop{
-  uint8_t usart_buf[20];
+  uint8_t usart_buf[25];
   uint8_t usart_cnt;
   uint8_t is_ip;
 } USART_prop_ptr;
@@ -78,6 +78,7 @@ typedef struct icmp_pkt{
 //--------------------------------------------------
 void net_ini(void);
 void net_poll(void);
+void net_cmd(void);
 void eth_send(enc28j60_frame_ptr *frame, uint16_t len);
 void UART1_RxCpltCallback(void);
 void TIM_PeriodElapsedCallback(void);

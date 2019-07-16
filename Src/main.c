@@ -56,7 +56,7 @@ UART_HandleTypeDef huart1;
 
 osThreadId defaultTaskHandle;
 /* USER CODE BEGIN PV */
-
+osThreadId BuzzerTaskHandle;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -71,6 +71,7 @@ void StartDefaultTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
 void StartBuzzerTask(void const * argument);
+void StartUdpTestTask(void const * argument);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -141,10 +142,10 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  osThreadDef(buzzerTask, StartBuzzerTask, osPriorityNormal, 0, 64);
-  osThreadCreate(osThread(buzzerTask), NULL);
-  /* USER CODE END RTOS_THREADS */
 
+  /* USER CODE END RTOS_THREADS */
+  osThreadDef(udpTestTask, StartUdpTestTask, osPriorityNormal, 0, 64);
+  osThreadCreate(osThread(udpTestTask), NULL);
   /* Start scheduler */
   osKernelStart();
   
@@ -468,7 +469,7 @@ void StartBuzzerTask(void const * argument)
 	uint32_t period = 10000;
 	uint32_t step = -100;
 	TIM4->CCR1 = 300;
-
+	uint32_t counter = 0;
 	while(1)
 	{
 		TIM4->ARR  = period;
@@ -476,13 +477,28 @@ void StartBuzzerTask(void const * argument)
 		//if (period >= 10000) step = -100;
 		if (period <= 6000)
 		{
+			if (counter > 3) break;
+			counter++;
 			period = 10000;//step = 100;
 		}
-		osDelay(5);
+		osDelay(6);
 	}
 
 	HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);
+	vTaskDelete(NULL);
+}
 
+void StartUdpTestTask(void const * argument)
+{
+	osThreadDef(buzzerTask, StartBuzzerTask, osPriorityNormal, 0, 64);
+	uint8_t ip[4]={10,10,10,180};
+	static uint16_t port=47796;
+	while (1) {
+		osDelay(5000);
+		udp_send(ip, port);
+		BuzzerTaskHandle = osThreadCreate(osThread(buzzerTask), NULL);
+	}
+	vTaskDelete(NULL);
 }
 /* USER CODE END 4 */
 

@@ -21,5 +21,7 @@ Middlewares/Third_Party/FreeRTOS/Source \
 Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM3 \
 Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang \
 Src \
+Src/ds18b20 \
+Src/enc28j60 \
 startup \
 

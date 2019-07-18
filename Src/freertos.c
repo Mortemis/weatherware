@@ -27,6 +27,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */     
 #include "tim.h"
+#include "adc.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,7 +56,9 @@ osThreadId defaultTaskHandle;
 void StartBuzzerTask(void const * argument);
 void StartAlarmTask(void const * argument);
 void StartBlinkTask(void const * argument);
+void StartADCTask(void const * argument);
 void init_buzz(void);
+void init_photores(void);
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void const * argument);
@@ -100,6 +103,7 @@ void MX_FREERTOS_Init(void) {
   osThreadCreate(osThread(blinkTask), NULL);
 
   init_buzz();
+  init_photores();
   //osThreadDef(alarmTask, StartAlarmTask, osPriorityNormal, 0, 128);
   //osThreadCreate(osThread(alarmTask), NULL);
   /* USER CODE END RTOS_THREADS */
@@ -127,7 +131,8 @@ void StartDefaultTask(void const * argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
-	uint8_t buzz_flag = 0;
+uint32_t photores_value = 0;
+uint8_t buzz_flag = 0;
 
 void StartBlinkTask(void const * argument) {
 	while (1) {
@@ -175,9 +180,23 @@ void StartAlarmTask(void const * argument) {
 	vTaskDelete(NULL);
 }
 
+void StartADCTask(void const * argument) {
+	while (1) {
+		HAL_ADC_Start(&hadc1);
+		HAL_ADC_PollForConversion(&hadc1, 100);
+		photores_value = HAL_ADC_GetValue(&hadc1);
+		HAL_ADC_Stop(&hadc1);
+	}
+}
+
 void init_buzz(void) {
 	osThreadDef(buzzerTask, StartBuzzerTask, osPriorityNormal, 0, 128);
 	buzzerTaskHandle = osThreadCreate(osThread(buzzerTask), NULL);
+}
+
+void init_photores(void) {
+	osThreadDef(ADCTask, StartADCTask, osPriorityNormal, 0, 128);
+	osThreadCreate(osThread(ADCTask), NULL);
 }
 
 

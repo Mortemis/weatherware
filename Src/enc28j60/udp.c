@@ -4,6 +4,7 @@
 extern UART_HandleTypeDef huart1;
 extern char str1[60];
 extern uint8_t net_buf[ENC28J60_MAXFRAME];
+extern uint8_t buzz_flag;
 //--------------------------------------------------
 uint8_t udp_send(uint8_t *ip_addr, uint16_t port)
 {
@@ -32,26 +33,15 @@ uint8_t udp_send(uint8_t *ip_addr, uint16_t port)
 uint8_t udp_read(enc28j60_frame_ptr *frame, uint16_t len)
 {
 	uint8_t res=0;
-	sprintf(str1,"%02X:%02X:%02X:%02X:%02X:%02X-%02X:%02X:%02X:%02X:%02X:%02X; %d; ip\r\n",
-	 frame->addr_src[0],frame->addr_src[1],frame->addr_src[2],
-	 frame->addr_src[3],frame->addr_src[4],frame->addr_src[5],
-	 frame->addr_dest[0],frame->addr_dest[1],frame->addr_dest[2],
-	 frame->addr_dest[3],frame->addr_dest[4],frame->addr_dest[5],len);
-	HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0x1000);
-
 	ip_pkt_ptr *ip_pkt = (void*)(frame->data);
-	sprintf(str1,"%d.%d.%d.%d-%d.%d.%d.%d udp request\r\n",
-	 ip_pkt->ipaddr_src[0],ip_pkt->ipaddr_src[1],ip_pkt->ipaddr_src[2],ip_pkt->ipaddr_src[3],
-	 ip_pkt->ipaddr_dst[0],ip_pkt->ipaddr_dst[1],ip_pkt->ipaddr_dst[2],ip_pkt->ipaddr_dst[3]);
-	HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0x1000);
-
 	udp_pkt_ptr *udp_pkt = (void*)(ip_pkt->data);
-	sprintf(str1,"%u-%u\r\n", be16toword(udp_pkt->port_src),be16toword(udp_pkt->port_dst));
-	HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0x1000);
-	HAL_UART_Transmit(&huart1,udp_pkt->data,len-sizeof(udp_pkt_ptr),0x1000);
-	HAL_UART_Transmit(&huart1,(uint8_t*)"\r\n",2,0x1000);
 
+	uint8_t test = 0;
+
+	process_command((char*)udp_pkt->data);
+	check_parity();
 	udp_reply(frame, len);
+
 	return res;
 }
 //--------------------------------------------------
@@ -65,7 +55,7 @@ uint8_t udp_reply(enc28j60_frame_ptr *frame, uint16_t len)
 	udp_pkt->port_dst = udp_pkt->port_src;
 	udp_pkt->port_src = port;
 
-	strcpy((char*)udp_pkt->data,"UDP Reply:\r\nHello from UDP Server to UDP Client!!!\r\n");
+	strcpy((char*)udp_pkt->data, str1);
 	len = strlen((char*)udp_pkt->data) + sizeof(udp_pkt_ptr);
 	udp_pkt->len = be16toword(len);
 
@@ -76,5 +66,29 @@ uint8_t udp_reply(enc28j60_frame_ptr *frame, uint16_t len)
 
 	return res;
 }
+
+//BUG: if length is even, controller hard faults
+void check_parity() {
+	uint16_t l = strlen(str1);
+	if (l % 2 == 1)
+		strcat(str1, " \r\n");
+	else
+		strcat(str1, "\r\n");
+}
+//Process UDP command
+void process_command(char cmd[]) {
+	if (strcmp(cmd, "buzz\n") == 0) {
+		buzz_flag=1;
+		strcat(str1, "ok");
+	} else if (strcmp(cmd, "sens\n") == 0) {;
+		HAL_ADC_Start(&hadc1);
+		sprintf(str1,"sensor_data:[%lu]", HAL_ADC_GetValue(&hadc1));
+		HAL_ADC_Stop(&hadc1);
+	} else {
+		strcpy(str1, "error");
+	}
+}
+
+
 
 

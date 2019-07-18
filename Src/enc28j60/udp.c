@@ -36,8 +36,6 @@ uint8_t udp_read(enc28j60_frame_ptr *frame, uint16_t len)
 	ip_pkt_ptr *ip_pkt = (void*)(frame->data);
 	udp_pkt_ptr *udp_pkt = (void*)(ip_pkt->data);
 
-	uint8_t test = 0;
-
 	process_command((char*)udp_pkt->data);
 	check_parity();
 	udp_reply(frame, len);
@@ -79,11 +77,12 @@ void check_parity() {
 void process_command(char cmd[]) {
 	if (strcmp(cmd, "buzz\n") == 0) {
 		buzz_flag=1;
-		strcat(str1, "ok");
+		strcpy(str1, "ok");
 	} else if (strcmp(cmd, "sens\n") == 0) {;
 		HAL_ADC_Start(&hadc1);
 		sprintf(str1,"sensor_data:[%lu]", HAL_ADC_GetValue(&hadc1));
 		HAL_ADC_Stop(&hadc1);
+//		strcpy(str1, "ok");
 	} else {
 		strcpy(str1, "error");
 	}

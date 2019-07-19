@@ -7,6 +7,7 @@ extern uint8_t net_buf[ENC28J60_MAXFRAME];
 
 extern uint32_t photores_value;
 extern uint8_t buzz_flag;
+extern uint8_t alarm_flag;
 //--------------------------------------------------
 uint8_t udp_send(uint8_t *ip_addr, uint16_t port)
 {
@@ -78,10 +79,20 @@ void check_parity() {
 //Process UDP command
 void process_command(char cmd[]) {
 	if (strcmp(cmd, "buzz\n") == 0) {
-		buzz_flag=1;
+		if (alarm_flag) {
+			strcpy(str1, "busy");
+		} else {
+			buzz_flag = 1;
+			strcpy(str1, "ok");
+		}
+	} else if (strcmp(cmd, "sens\n") == 0) {
+		sprintf(str1, "light:[%lu%%]", 100 - photores_value * 100 / 4096);
+	} else if (strcmp(cmd, "alarm\n") == 0) {
+		alarm_flag = 1;
 		strcpy(str1, "ok");
-	} else if (strcmp(cmd, "sens\n") == 0) {;
-		sprintf(str1, "light:[%lu%%]", photores_value/4096*100);
+	} else if (strcmp(cmd, "alarmoff\n") == 0) {
+		alarm_flag = 0;
+		strcpy(str1, "ok");
 	} else {
 		strcpy(str1, "error");
 	}

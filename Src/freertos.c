@@ -59,10 +59,10 @@ void StartBlinkTask(void const * argument);
 void StartADCTask(void const * argument);
 void init_buzz(void);
 void init_photores(void);
+void init_alarm(void);
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void const * argument);
-
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -104,6 +104,7 @@ void MX_FREERTOS_Init(void) {
 
   init_buzz();
   init_photores();
+  init_alarm();
   //osThreadDef(alarmTask, StartAlarmTask, osPriorityNormal, 0, 128);
   //osThreadCreate(osThread(alarmTask), NULL);
   /* USER CODE END RTOS_THREADS */
@@ -131,9 +132,9 @@ void StartDefaultTask(void const * argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
-uint32_t photores_value = 0;
+uint32_t photores_value = 2048;
 uint8_t buzz_flag = 0;
-
+uint8_t alarm_flag = 0;
 void StartBlinkTask(void const * argument) {
 	while (1) {
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
@@ -155,7 +156,7 @@ void StartBuzzerTask(void const * argument) {
 			period += step;
 			//if (period >= 10000) step = -100;
 			if (period <= 6000) {
-				if (counter > 3)
+				if (counter >= 2)
 					break;
 				counter++;
 				period = 10000;  //step = 100;
@@ -170,22 +171,31 @@ void StartBuzzerTask(void const * argument) {
 }
 
 void StartAlarmTask(void const * argument) {
-	osThreadDef(buzzerTask, StartBuzzerTask, osPriorityNormal, 0, 128);
-	//uint8_t ip[4]={10,10,10,180};
-	//static uint16_t port=47796;
+
 	while (1) {
-		osDelay(5000);
-		buzzerTaskHandle = osThreadCreate(osThread(buzzerTask), NULL);
+		if (alarm_flag == 0) {
+			HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);
+		}
+		while (alarm_flag == 0) {
+			osDelay(5);
+		}
+		HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+		while (alarm_flag == 1) {
+			TIM4->CCR1 = 250;//value*16;//258;//value*1024;
+			TIM4->ARR = photores_value*16;//65535-photores_value*16;
+			osDelay(5);
+		}
 	}
-	vTaskDelete(NULL);
+
 }
 
 void StartADCTask(void const * argument) {
 	while (1) {
 		HAL_ADC_Start(&hadc1);
-		HAL_ADC_PollForConversion(&hadc1, 100);
+		//HAL_ADC_PollForConversion(&hadc1, 100);
 		photores_value = HAL_ADC_GetValue(&hadc1);
 		HAL_ADC_Stop(&hadc1);
+		osDelay(5);
 	}
 }
 
@@ -197,6 +207,11 @@ void init_buzz(void) {
 void init_photores(void) {
 	osThreadDef(ADCTask, StartADCTask, osPriorityNormal, 0, 128);
 	osThreadCreate(osThread(ADCTask), NULL);
+}
+
+void init_alarm(void) {
+	osThreadDef(alarmTask, StartAlarmTask, osPriorityNormal, 0, 128);
+	osThreadCreate(osThread(alarmTask), NULL);
 }
 
 

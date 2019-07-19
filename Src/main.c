@@ -96,24 +96,24 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-	MX_GPIO_Init();
-	MX_ADC1_Init();
-	MX_SPI1_Init();
-	MX_TIM4_Init();
-	MX_USART1_UART_Init();
-	MX_I2C1_Init();
-	MX_TIM3_Init();
+  MX_GPIO_Init();
+  MX_ADC1_Init();
+  MX_SPI1_Init();
+  MX_TIM4_Init();
+  MX_USART1_UART_Init();
+  MX_I2C1_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
 	//Ds18b20_Init(osPriorityNormal);
-
+net_ini();
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
-	MX_FREERTOS_Init();
-	net_ini();
+  MX_FREERTOS_Init();
+
   /* Start scheduler */
-	osKernelStart();
+  osKernelStart();
   
   /* We should never get here as control is now taken by the scheduler */
 

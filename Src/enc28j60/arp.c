@@ -1,6 +1,5 @@
 #include "arp.h"
 //--------------------------------------------------
-extern UART_HandleTypeDef huart1;
 extern uint8_t ipaddr[4];
 extern uint8_t macaddr[6];
 extern char str1[60];
@@ -76,14 +75,14 @@ void arp_send(enc28j60_frame_ptr *frame)
 	memcpy(frame->addr_dest,frame->addr_src,6);
 	eth_send(frame,sizeof(arp_msg_ptr));
 
-	sprintf(str1,"%02X:%02X:%02X:%02X:%02X:%02X(%d.%d.%d.%d)-",
-		frame->addr_dest[0],frame->addr_dest[1],frame->addr_dest[2],frame->addr_dest[3],frame->addr_dest[4],frame->addr_dest[5],
-		msg->ipaddr_dst[0],msg->ipaddr_dst[1],msg->ipaddr_dst[2],msg->ipaddr_dst[3]);
-	HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0x1000);
-	sprintf(str1,"%02X:%02X:%02X:%02X:%02X:%02X(%d.%d.%d.%d) arp request\r\n",
-		frame->addr_src[0],frame->addr_src[1],frame->addr_src[2],frame->addr_src[3],frame->addr_src[4],frame->addr_src[5],
-	    msg->ipaddr_src[0],msg->ipaddr_src[1],msg->ipaddr_src[2],msg->ipaddr_src[3]);
-	HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0x1000);
+//	sprintf(str1,"%02X:%02X:%02X:%02X:%02X:%02X(%d.%d.%d.%d)-",
+//		frame->addr_dest[0],frame->addr_dest[1],frame->addr_dest[2],frame->addr_dest[3],frame->addr_dest[4],frame->addr_dest[5],
+//		msg->ipaddr_dst[0],msg->ipaddr_dst[1],msg->ipaddr_dst[2],msg->ipaddr_dst[3]);
+//	HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0x1000);
+//	sprintf(str1,"%02X:%02X:%02X:%02X:%02X:%02X(%d.%d.%d.%d) arp request\r\n",
+//		frame->addr_src[0],frame->addr_src[1],frame->addr_src[2],frame->addr_src[3],frame->addr_src[4],frame->addr_src[5],
+//	    msg->ipaddr_src[0],msg->ipaddr_src[1],msg->ipaddr_src[2],msg->ipaddr_src[3]);
+//	HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0x1000);
 }
 //-----------------------------------------------
 uint8_t arp_request(uint8_t *ip_addr)
@@ -103,12 +102,12 @@ uint8_t arp_request(uint8_t *ip_addr)
 			//смотрим ARP-таблицу
 			for(i=0;i<5;i++)
 			{
-				sprintf(str1,"%d.%d.%d.%d - %02X:%02X:%02X:%02X:%02X:%02X - %lu\r\n",
-				arp_rec[i].ipaddr[0],arp_rec[i].ipaddr[1],arp_rec[i].ipaddr[2],arp_rec[i].ipaddr[3],
-				arp_rec[i].macaddr[0],arp_rec[i].macaddr[1],arp_rec[i].macaddr[2],
-				arp_rec[i].macaddr[3],arp_rec[i].macaddr[4],arp_rec[i].macaddr[5],
-				(unsigned long)arp_rec[i].sec);
-				HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0x1000);
+//				sprintf(str1,"%d.%d.%d.%d - %02X:%02X:%02X:%02X:%02X:%02X - %lu\r\n",
+//				arp_rec[i].ipaddr[0],arp_rec[i].ipaddr[1],arp_rec[i].ipaddr[2],arp_rec[i].ipaddr[3],
+//				arp_rec[i].macaddr[0],arp_rec[i].macaddr[1],arp_rec[i].macaddr[2],
+//				arp_rec[i].macaddr[3],arp_rec[i].macaddr[4],arp_rec[i].macaddr[5],
+//				(unsigned long)arp_rec[i].sec);
+//				HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0x1000);
 			}
 			 memcpy(frame->addr_dest,arp_rec[j].macaddr,6);
 			  if(usartprop.is_ip==3)//статус отправки UDP-пакета
@@ -146,12 +145,12 @@ void arp_table_fill(enc28j60_frame_ptr *frame)
 	else current_arp_index=0;
 	for(i=0;i<5;i++)
   {
-    sprintf(str1,"%d.%d.%d.%d - %02X:%02X:%02X:%02X:%02X:%02X - %lu\r\n",
-      arp_rec[i].ipaddr[0],arp_rec[i].ipaddr[1],arp_rec[i].ipaddr[2],arp_rec[i].ipaddr[3],
-      arp_rec[i].macaddr[0],arp_rec[i].macaddr[1],arp_rec[i].macaddr[2],
-      arp_rec[i].macaddr[3],arp_rec[i].macaddr[4],arp_rec[i].macaddr[5],
-      (unsigned long)arp_rec[i].sec);
-    HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0x1000);
+//    sprintf(str1,"%d.%d.%d.%d - %02X:%02X:%02X:%02X:%02X:%02X - %lu\r\n",
+//      arp_rec[i].ipaddr[0],arp_rec[i].ipaddr[1],arp_rec[i].ipaddr[2],arp_rec[i].ipaddr[3],
+//      arp_rec[i].macaddr[0],arp_rec[i].macaddr[1],arp_rec[i].macaddr[2],
+//      arp_rec[i].macaddr[3],arp_rec[i].macaddr[4],arp_rec[i].macaddr[5],
+//      (unsigned long)arp_rec[i].sec);
+//    HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0x1000);
   } 
 }
 //--------------------------------------------------

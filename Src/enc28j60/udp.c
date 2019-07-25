@@ -1,13 +1,14 @@
  #include "udp.h"
 
 //--------------------------------------------------
-extern UART_HandleTypeDef huart1;
 extern char str1[60];
 extern uint8_t net_buf[ENC28J60_MAXFRAME];
 
 extern uint32_t photores_value;
 extern uint8_t buzz_flag;
 extern uint8_t alarm_flag;
+extern float pressure;
+extern float temperature;
 //--------------------------------------------------
 uint8_t udp_send(uint8_t *ip_addr, uint16_t port)
 {
@@ -86,7 +87,7 @@ void process_command(char cmd[]) {
 			strcpy(str1, "ok");
 		}
 	} else if (strcmp(cmd, "sens\n") == 0) {
-		sprintf(str1, "light:[%lu%%]", 100 - photores_value * 100 / 4096);
+		sprintf(str1, "light:[%lu%%],temp:[%0.2f],pres:[%0.2f]", 100 - photores_value * 100 / 4096, temperature, pressure);
 	} else if (strcmp(cmd, "alarm\n") == 0) {
 		alarm_flag = 1;
 		strcpy(str1, "ok");

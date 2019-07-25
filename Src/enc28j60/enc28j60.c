@@ -1,7 +1,6 @@
 #include "enc28j60.h"
 //-----------------------------------------------
 extern SPI_HandleTypeDef hspi1;
-extern UART_HandleTypeDef huart1;
 //-----------------------------------------------
 static uint8_t Enc28j60Bank;
 static int gNextPacketPtr;

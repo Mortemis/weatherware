@@ -26,8 +26,12 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */     
+#include "stdlib.h"
 #include "tim.h"
 #include "adc.h"
+#include "ds18b20/ds18b20.h"
+#include "bmp280.h"
+#include "i2c.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,6 +52,10 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
 osThreadId buzzerTaskHandle;
+
+
+BMP280_HandleTypedef bmp280;
+float pressure, temperature, humidity;
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
 
@@ -57,9 +65,11 @@ void StartBuzzerTask(void const * argument);
 void StartAlarmTask(void const * argument);
 void StartBlinkTask(void const * argument);
 void StartADCTask(void const * argument);
+void StartBMPTask(void const * argument);
 void init_buzz(void);
 void init_photores(void);
 void init_alarm(void);
+void init_bmp(void);
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void const * argument);
@@ -73,7 +83,7 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
-       
+
   /* USER CODE END Init */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -102,6 +112,10 @@ void MX_FREERTOS_Init(void) {
   osThreadDef(blinkTask, StartBlinkTask, osPriorityNormal, 0, 128);
   osThreadCreate(osThread(blinkTask), NULL);
 
+  Ds18b20_Init(osPriorityNormal);
+
+
+  init_bmp();
   init_buzz();
   init_photores();
   init_alarm();
@@ -135,6 +149,7 @@ void StartDefaultTask(void const * argument)
 uint32_t photores_value = 2048;
 uint8_t buzz_flag = 0;
 uint8_t alarm_flag = 0;
+
 void StartBlinkTask(void const * argument) {
 	while (1) {
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
@@ -199,6 +214,52 @@ void StartADCTask(void const * argument) {
 	}
 }
 
+void StartBMPTask(void const * argument) {
+	bmp280_init_default_params(&bmp280.params);
+	bmp280.addr = BMP280_I2C_ADDRESS_0;
+	bmp280.i2c = &hi2c1;
+	uint16_t size;
+	uint8_t Data[256];
+	char bmp_data[256] = {0};
+	while (!bmp280_init(&bmp280, &bmp280.params)) {
+			size = sprintf((char *)Data, "BMP280 initialization failed\n");
+			//HAL_UART_Transmit(&huart1, Data, size, 1000);
+			osDelay(2000);
+	}
+	bool bme280p = bmp280.id == BME280_CHIP_ID;
+
+
+
+	while (1) {
+
+		osDelay(100);
+		while (!bmp280_read_float(&bmp280, &temperature, &pressure, &humidity)) {
+				//	size = sprintf((char *)Data,
+				//			"Temperature/pressure reading failed\n");
+					//HAL_UART_Transmit(&huart1, Data, size, 1000);
+					//HAL_Delay(2000);
+					osDelay(100);
+				}
+				//sprintf(bmp_data, "Pressure: %f Pa, Temperature: 2f C",
+				//				pressure, temperature);
+
+				//size = sprintf((char *)Data,"Pressure: %.2f Pa, Temperature: %.2f C",
+				//		pressure, temperature);
+				//HAL_UART_Transmit(&huart1, Data, size, 1000);
+				if (bme280p) {
+				//size = sprintf((char *)Data,", Humidity: %.2f\n", humidity);
+					//HAL_UART_Transmit(&huart1, Data, size, 1000);
+				}
+
+				else {
+				//	size = sprintf((char *)Data, "\n");
+					//HAL_UART_Transmit(&huart1, Data, size, 1000);
+				}
+
+		osDelay(2000);
+	}
+}
+
 void init_buzz(void) {
 	osThreadDef(buzzerTask, StartBuzzerTask, osPriorityNormal, 0, 128);
 	buzzerTaskHandle = osThreadCreate(osThread(buzzerTask), NULL);
@@ -214,6 +275,10 @@ void init_alarm(void) {
 	osThreadCreate(osThread(alarmTask), NULL);
 }
 
+void init_bmp(void) {
+	osThreadDef(bmpTask, StartBMPTask, osPriorityNormal, 0, 256);
+	osThreadCreate(osThread(bmpTask), NULL);
+}
 
 
 /* USER CODE END Application */
